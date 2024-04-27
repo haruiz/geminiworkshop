@@ -77,7 +77,7 @@ def cosine_similarity(a: np.array, b: np.array) -> float:
 
 
 if __name__ == "__main__":
-    embeddings_df = pd.read_csv("embeddings.csv")  # generate_embeddings()
+    embeddings_df = generate_embeddings()
     embeddings_arr = np.asarray(embeddings_df.iloc[:, 2:])
     embeddings_labels = embeddings_df["content"]
 

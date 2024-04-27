@@ -42,6 +42,7 @@ numpy = "^1.26.4"
 gradio = "^4.27.0"
 pydantic = "^2.7.1"
 tensorflow = "^2.16.1"
+google-cloud-aiplatform = {extras = ["reasoningengine"], version = "^1.48.0"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.0"
