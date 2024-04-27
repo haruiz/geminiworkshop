@@ -30,32 +30,6 @@ model_kwargs = {
 }
 
 
-def sum(a: int, b: int):
-    """Adds two numbers together.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        int: The sum of the two numbers.
-    """
-    return a + b
-
-
-def multiply(a: int, b: int):
-    """Multiplies two numbers together.
-
-    Args:
-        a: The first number.
-        b: The second number.
-
-    Returns:
-        int: The product of the two numbers.
-    """
-    return a * b
-
-
 class Agent:
     """
     The Agent class is a wrapper around the reasoning engine that allows you to interact with it.
@@ -133,6 +107,32 @@ class Agent:
             remote_app.delete()
 
 
+def sum(a: int, b: int):
+    """Adds two numbers together.
+
+    Args:
+        a: The first number.
+        b: The second number.
+
+    Returns:
+        int: The sum of the two numbers.
+    """
+    return a + b
+
+
+def multiply(a: int, b: int):
+    """Multiplies two numbers together.
+
+    Args:
+        a: The first number.
+        b: The second number.
+
+    Returns:
+        int: The product of the two numbers.
+    """
+    return a * b
+
+
 if __name__ == "__main__":
 
     PROJECT_ID = "build-with-ai-project"
@@ -143,7 +143,6 @@ if __name__ == "__main__":
     vertexai.init(project=PROJECT_ID, location=LOCATION, staging_bucket=STAGING_BUCKET)
 
     agent = Agent(model=MODEL, tools=[sum, multiply], model_kwargs=model_kwargs)
-
     response = agent.query(
         input="You have 3 apples and 2 oranges. "
         "How many fruits do you have in total?. Multiply the results of the operation by 2."
