@@ -1,9 +1,7 @@
-import time
 import typing
 from pathlib import Path
-import random
 
-import google.ai.generativelanguage as glm
+import gradio as gr
 import tenacity
 import vertexai
 from dotenv import load_dotenv, find_dotenv
@@ -11,17 +9,15 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from rich.console import Console
 from vertexai.generative_models import (
-    Content,
     FunctionDeclaration,
     GenerationConfig,
     GenerativeModel,
-    Part,
     Tool,
 )
-from rich.console import Console
 from vertexai.preview.vision_models import ImageGenerationModel
-import gradio as gr
+
 from utils import get_image_bytes_base64
 
 load_dotenv(find_dotenv())

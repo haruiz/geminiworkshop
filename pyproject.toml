@@ -43,6 +43,8 @@ gradio = "^4.27.0"
 pydantic = "^2.7.1"
 tensorflow = "^2.16.1"
 google-cloud-aiplatform = {extras = ["reasoningengine"], version = "^1.48.0"}
+sentence-transformers = "^2.7.0"
+seaborn = "^0.13.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.0"
