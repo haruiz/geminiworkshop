@@ -1,13 +1,19 @@
+import time
+
 import google.generativeai as genai
 from diskcache import Cache
 from dotenv import load_dotenv, find_dotenv
+from google.generativeai.types import File
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from rich.console import Console
-
-from utils import *
+import validators
+from pathlib import Path
+import os
+import typing
+from utils import download_file
 
 load_dotenv(find_dotenv())
 
@@ -16,22 +22,30 @@ console = Console()
 cache = Cache(directory=".cache")
 
 
-def upload_and_cache_file(file_path: typing.Union[str, Path]):
+def upload_and_cache_file(file_path: typing.Union[str, Path]) -> File:
     """
-    This function uploads a file to google storage and caches the file locally.
-    :param file_path:
-    :return:
+    Uploads a file to Google Storage and caches it locally.
+
+    If the file_path is a URL, it downloads the file first.
+    Then, it checks the cache for the file; if not present, uploads the file and caches the result.
+
+    :param file_path: Path to the file or URL of the file to upload.
+    :return: The uploaded file URL or identifier.
     """
     file_name = Path(file_path).name
+    file_path = str(file_path)
+
+    # Download if file_path is a URL
     if validators.url(file_path):
         download_file(file_path, file_name)
         file_path = file_name
 
-    if cache.get(file_name) is None:
+    # Check cache first
+    uploaded_file = cache.get(file_name)
+    if uploaded_file is None:
         uploaded_file = genai.upload_file(file_path)
         cache.set(file_name, uploaded_file)
-    else:
-        uploaded_file = cache.get(file_name)
+
     return uploaded_file
 
 
@@ -78,36 +92,14 @@ def video_example(force_download=False):
     """
     # https://gist.github.com/jsturgis/3b19447b304616f18657
     video_file_uri = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-    # The Gemini API currently does not support video files directly. Instead,
-    # you can provide a series of timestamps and image files.
-    video_file_name = Path(video_file_uri).name
-    video_file_path = Path(video_file_name)
-
-    video_frames_folder = Path(Path(video_file_name).stem)
-    video_frames_folder.mkdir(parents=True, exist_ok=True)
-    # upload and extract frames
-    if not video_file_path.exists() or force_download:
-        download_file(video_file_uri, video_file_path)
-        extract_video_frames(video_file_path, video_frames_folder)
-
-    frames_files = list(video_frames_folder.glob("*.jpg"))
-    frames_files.sort(key=lambda x: get_frame_timestamp(x.name))
-    files = {}
-    # upload and cache frames files, so next time we don't need to upload them again
-    for frame_file in tqdm(frames_files):
-        file_name = frame_file.name
-        file_timestamp = get_frame_timestamp(file_name)
-        files[file_timestamp] = upload_and_cache_file(frame_file)
-
+    uploaded_file = upload_and_cache_file(video_file_uri)
+    while uploaded_file.state.name == "PROCESSING":
+        time.sleep(10)
+        uploaded_file = genai.get_file(uploaded_file.name)
+    if uploaded_file.state.name == "FAILED":
+        raise Exception("File upload failed")
     model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
-    for timespan, file in files.items():
-        print(f"Timestamp: {timespan}, File: {file.name}")
-
-    prompt = ["Describe the video below in detail."]
-    for timespan, file in files.items():
-        prompt.append(timespan)
-        prompt.append(file)
-
+    prompt = ["Describe the following video:", uploaded_file]
     response_chunks = model.generate_content(prompt, stream=True)
     for chunk in response_chunks:
         console.print(chunk.text, end="")
@@ -146,4 +138,4 @@ def langchain_example():
 if __name__ == "__main__":
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-    video_example()
+    audio_example()

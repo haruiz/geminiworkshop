@@ -19,6 +19,8 @@ from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from tqdm import tqdm
+import matplotlib.cm
+import matplotlib
 
 
 def extract_video_frames(
@@ -249,15 +251,15 @@ def plot_embeddings(
     # Plot setup
     if ax is None:
         fig, ax = plt.subplots()
-    colors = plt.cm.get_cmap(
-        "tab10", len(set(embeddings_labels))
-    )  # Get a colormap for the labels
+    cmap = matplotlib.colormaps.get_cmap("tab10")
+    cmap = matplotlib.colors.ListedColormap(cmap.colors)
+    colors = [cmap(i) for i in range(len(set(embeddings_labels)))]
 
     # Plot points
     for i, label in enumerate(set(embeddings_labels)):
         indices = [j for j, x in enumerate(embeddings_labels) if x == label]
         x, y = projected_points[indices, 0], projected_points[indices, 1]
-        ax.scatter(x, y, color=colors(i), label=label)
+        ax.scatter(x, y, color=colors[i], label=label)
         if show_labels:
             for xi, yi in zip(x, y):
                 ax.text(xi, yi, label)

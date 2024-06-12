@@ -1,15 +1,7 @@
 import tenacity
-from langchain_google_vertexai import HarmBlockThreshold, HarmCategory
 import vertexai
 from vertexai.preview import reasoning_engines
 
-safety_settings = {
-    HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
-    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-}
 
 model_kwargs = {
     # temperature (float): The sampling temperature controls the degree of
@@ -24,9 +16,6 @@ model_kwargs = {
     # top_k (int): The next token is selected from among the top-k most
     # probable tokens.
     "top_k": 40,
-    # safety_settings (Dict[HarmCategory, HarmBlockThreshold]): The safety
-    # settings to use for generating content.
-    "safety_settings": safety_settings,
 }
 
 
@@ -64,11 +53,11 @@ class Agent:
         Returns:
             str: The resource name of the deployed reasoning engine.
         """
-        agent_requirements = [
+        agent_default_requirements = [
             "google-cloud-aiplatform[reasoningengine,langchain]",
         ]
-        if requirements is None:
-            agent_requirements.extend(requirements)
+        if requirements:
+            agent_default_requirements.extend(requirements)
 
         remote_app = reasoning_engines.ReasoningEngine.create(
             reasoning_engines.LangchainAgent(
@@ -79,7 +68,7 @@ class Agent:
                 ],  # Optional. List of functions to be used in the reasoning engine.)
                 model_kwargs=model_kwargs,  # Optional.
             ),
-            requirements=agent_requirements,
+            requirements=agent_default_requirements,
             display_name=agent_name,
         )
         return remote_app.resource_name
@@ -138,13 +127,15 @@ if __name__ == "__main__":
     PROJECT_ID = "build-with-ai-project"
     LOCATION = "us-central1"
     STAGING_BUCKET = "gs://build-with-ai-project-vertexai"
-    MODEL = "gemini-1.0-pro"
+    MODEL = "models/gemini-1.5-flash-latest"
 
     vertexai.init(project=PROJECT_ID, location=LOCATION, staging_bucket=STAGING_BUCKET)
 
     agent = Agent(model=MODEL, tools=[sum, multiply], model_kwargs=model_kwargs)
+    agent_endpoint = agent.deploy(agent_name="test-agent")
+    print("the agent has been deployed at:", agent_endpoint)
     response = agent.query(
         input="You have 3 apples and 2 oranges. "
-        "How many fruits do you have in total?. Multiply the results of the operation by 2."
+        "How many fruits do you have in total?. Multiply the results of the previous operation by 2."
     )
     print(response)

@@ -87,7 +87,6 @@ class PICASSO:
 
         Args:
             prompt (str): The prompt to use for generating the poem.
-            images_folder (str): The path to the folder containing the images.
 
         Returns:
             str: The text generated from the image.
@@ -96,10 +95,6 @@ class PICASSO:
             if prompt is None:
                 raise ValueError("prompt cannot be None")
 
-            text_part = {
-                "type": "text",
-                "text": "use the following image to get your inspiration for the poem",
-            }
             images = list(Path(self.images_folder).iterdir())
             if len(images) == 0:
                 raise ValueError("No images found in the images folder.")
@@ -111,10 +106,12 @@ class PICASSO:
                 }
                 for image_path in images
             ]
+            text_part = {
+                "type": "text",
+                "text": "write a poem based on the prompt {prompt} and the images.",
+            }
             messages = [
-                SystemMessage(
-                    content="you are poet!, write a poem based on the user prompt {prompt}."
-                ),
+                SystemMessage(content="you are an artist!"),
                 HumanMessage(content=[text_part] + image_parts),
             ]
             chain = (
@@ -128,7 +125,7 @@ class PICASSO:
             console.log(f"An error occurred: {e}")
             raise e
 
-    def get_toolbox(self):
+    def get_tools_declaration(self):
         """
         Returns the tools available for the PICASSO class.
         """
@@ -169,7 +166,7 @@ class PICASSO:
             chat_model = GenerativeModel(
                 model_name="gemini-1.0-pro-001",
                 generation_config=GenerationConfig(temperature=0),
-                tools=self.get_toolbox(),
+                tools=self.get_tools_declaration(),
             )
 
             chat = chat_model.start_chat()

@@ -13,6 +13,9 @@ BigBuckBunny/
 *.mp4
 build/
 develop-eggs/
+.python-version
+poetry.lock
+.idea/
 dist/
 downloads/
 eggs/

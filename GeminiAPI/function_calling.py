@@ -77,7 +77,7 @@ def advanced_example():
     model = genai.GenerativeModel("gemini-pro", tools=calculator)
     chat = model.start_chat()
     response = chat.send_message(
-        f"What's 234551 X 325552 ?",
+        "What's 234551 X 325552 ?",
     )
     console.print(response)
 

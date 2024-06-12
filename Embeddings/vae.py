@@ -55,6 +55,10 @@ if __name__ == "__main__":
     decoder.summary()
 
     class VAE(keras.Model):
+        """
+        Variational Autoencoder (VAE) implementation
+        """
+
         def __init__(self, encoder, decoder, **kwargs):
             super().__init__(**kwargs)
             self.encoder = encoder
@@ -97,10 +101,10 @@ if __name__ == "__main__":
             }
 
     vae = VAE(encoder, decoder)
-    # vae.compile(optimizer=keras.optimizers.Adam())
-    # vae.fit(mnist_digits, epochs=30, batch_size=128)
-    # vae.build(mnist_digits.shape)
-    # vae.save_weights("vae.weights.h5")
+    vae.compile(optimizer=keras.optimizers.Adam())
+    vae.fit(mnist_digits, epochs=30, batch_size=128)
+    vae.build(mnist_digits.shape)
+    vae.save_weights("vae.weights.h5")
 
     vae.load_weights("vae.weights.h5")
 

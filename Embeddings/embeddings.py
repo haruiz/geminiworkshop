@@ -3,8 +3,8 @@ import warnings
 from matplotlib import pyplot as plt
 
 from utils import get_image_bytes_base64, plot_embeddings
+from sklearn.metrics.pairwise import cosine_similarity
 
-warnings.filterwarnings("ignore")
 import typing
 from pathlib import Path
 
@@ -14,8 +14,12 @@ from dotenv import load_dotenv, find_dotenv
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from rich.console import Console
-from embeddings_image_bind import MultimodalEmbeddingsImageBind
+import seaborn as sns
 
+# from embeddings_image_bind import MultimodalEmbeddingsImageBind
+from embeddings_vertexai import MultiModalEmbeddingsVertexAI
+
+warnings.filterwarnings("ignore")
 console = Console()
 
 load_dotenv(find_dotenv())
@@ -49,16 +53,15 @@ def generate_embeddings():
     Generate embeddings for images and their captions found in the data/images directory
     """
     images = Path("data/images").rglob("*.jpg")
-    # image_embedding_client = MultiModalEmbeddingsVertexAI(
-    #     project="build-with-ai-project"
-    # )
-    image_embedding_client = MultimodalEmbeddingsImageBind()
+    image_embedding_client = MultiModalEmbeddingsVertexAI(
+        project="build-with-ai-project"
+    )
+    # image_embedding_client = MultimodalEmbeddingsImageBind()
     gemini = ChatGoogleGenerativeAI(model="gemini-pro-vision")
     multimodal_instances = []
     for image in images:
         multimodal_instances.append((image, "image"))
         multimodal_instances.append((get_image_caption(gemini, image), "text"))
-
     embeddings_df = image_embedding_client.get_embeddings_batch(
         multimodal_instances, batch_size=2
     )
@@ -66,46 +69,33 @@ def generate_embeddings():
     return embeddings_df
 
 
-def cosine_similarity(a: np.array, b: np.array) -> float:
-    """
-    Calculate cosine similarity between two vectors
-    """
-    dot_product = np.dot(a, b)
-    norm_a = np.linalg.norm(a)
-    norm_b = np.linalg.norm(b)
-    return dot_product / (norm_a * norm_b)
+# def cosine_similarity(a: np.array, b: np.array) -> float:
+#     """
+#     Calculate cosine similarity between two vectors
+#     """
+#     dot_product = np.dot(a, b)
+#     norm_a = np.linalg.norm(a)
+#     norm_b = np.linalg.norm(b)
+#     return dot_product / (norm_a * norm_b)
 
 
 if __name__ == "__main__":
+    # Assuming embeddings_df is already generated
     embeddings_df = generate_embeddings()
     embeddings_arr = np.asarray(embeddings_df.iloc[:, 2:])
     embeddings_labels = embeddings_df["content"]
-
-    similarity_df = pd.DataFrame()
-    for i in range(len(embeddings_arr)):
-        for j in range(len(embeddings_arr)):
-            similarity = cosine_similarity(embeddings_arr[i], embeddings_arr[j])
-            similarity_df = pd.concat(
-                [
-                    similarity_df,
-                    pd.DataFrame(
-                        [
-                            {
-                                "content1": embeddings_labels[i],
-                                "content2": embeddings_labels[j],
-                                "similarity": similarity,
-                            }
-                        ]
-                    ),
-                ]
-            )
-
-    similarity_df = (
-        similarity_df.groupby("content1", group_keys=False)
-        .apply(lambda x: x.nlargest(5, "similarity"))
-        .reset_index(drop=True)
+    # Calculate the cosine similarity matrix
+    similarity_matrix = cosine_similarity(embeddings_arr)
+    # Create a DataFrame from the similarity matrix
+    similarity_df = pd.DataFrame(
+        similarity_matrix, columns=embeddings_labels, index=embeddings_labels
     )
-    similarity_df.to_csv("similarity.csv", index=False)
+    # Now similarity_df contains the similarity scores between all pairs
+    plt.figure(figsize=(10, 10))
+    sns.heatmap(similarity_df, annot=True, cmap="coolwarm")
+    plt.savefig("similarity_matrix.png")
+    plt.show()
+
     reducers = {
         "pca": {},
         "tsne": {"perplexity": 5},
