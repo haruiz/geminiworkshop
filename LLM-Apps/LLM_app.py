@@ -34,7 +34,7 @@ class PICASSO:
         Initialize the PICASSO class with the required models.
         """
         self.images_folder = Path(images_folder)
-        self.images_folder.mkdir(exist_ok=True)
+        self.images_folder.mkdir(exist_ok=True, parents=True)
 
         self.image_gen_model = ImageGenerationModel.from_pretrained(
             "imagegeneration@006"

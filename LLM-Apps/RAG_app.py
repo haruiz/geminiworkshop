@@ -140,7 +140,7 @@ if __name__ == "__main__":
     DOCUMENT_PATH = "./../data/state_of_the_union.txt"
 
     # Create RAGSystem instance and execute main function
-    chat_model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.5)
+    chat_model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.5)
     embeddings_model = GoogleGenerativeAIEmbeddings(
         model="models/embedding-001", task_type="retrieval_document"
     )
