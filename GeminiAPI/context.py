@@ -126,7 +126,7 @@ def simple_rag():
             model="models/embedding-001", task_type="retrieval_document"
         )
 
-        loader = TextLoader("state_of_the_union.txt")
+        loader = TextLoader("./../data/state_of_the_union.txt")
         documents = loader.load()
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         docs = text_splitter.split_documents(documents)
@@ -155,4 +155,4 @@ def simple_rag():
 
 
 if __name__ == "__main__":
-    with_memory_interaction()
+    simple_rag()

@@ -45,6 +45,9 @@ google-cloud-aiplatform = {extras = ["reasoningengine"], version = "^1.51.1"}
 sentence-transformers = "^3.0.1"
 seaborn = "^0.13.2"
 weaviate-client = "^4.6.4"
+chainlit = "^1.1.301"
+yaspin = "^3.0.2"
+langchain-weaviate = "^0.0.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.0"

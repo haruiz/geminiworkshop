@@ -39,7 +39,12 @@ class PICASSO:
         self.image_gen_model = ImageGenerationModel.from_pretrained(
             "imagegeneration@006"
         )
-        self.poem_gen_model = ChatGoogleGenerativeAI(model="gemini-pro-vision")
+        self.poem_gen_model = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+        self.chat_model = GenerativeModel(
+            model_name="gemini-1.5-flash",
+            generation_config=GenerationConfig(temperature=0),
+            tools=self.get_tools_declaration(),
+        )
 
     @tenacity.retry(wait=tenacity.wait_fixed(2), stop=tenacity.stop_after_attempt(3))
     def generate_images(
@@ -108,7 +113,7 @@ class PICASSO:
             ]
             text_part = {
                 "type": "text",
-                "text": "write a poem based on the prompt {prompt} and the images.",
+                "text": f"write a poem based on the prompt {prompt} and the images.",
             }
             messages = [
                 SystemMessage(content="you are an artist!"),
@@ -163,13 +168,8 @@ class PICASSO:
             prompt (str): The prompt to use for generating the poem.
         """
         try:
-            chat_model = GenerativeModel(
-                model_name="gemini-1.0-pro-001",
-                generation_config=GenerationConfig(temperature=0),
-                tools=self.get_tools_declaration(),
-            )
 
-            chat = chat_model.start_chat()
+            chat = self.chat_model.start_chat()
 
             def echo(history, message):
                 """

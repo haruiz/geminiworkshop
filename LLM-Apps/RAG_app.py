@@ -137,7 +137,7 @@ class RAGApp:
 if __name__ == "__main__":
     # Constants
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-    DOCUMENT_PATH = "data/state_of_the_union.txt"
+    DOCUMENT_PATH = "./../data/state_of_the_union.txt"
 
     # Create RAGSystem instance and execute main function
     chat_model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.5)
