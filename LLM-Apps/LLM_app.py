@@ -8,7 +8,7 @@ from dotenv import load_dotenv, find_dotenv
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
 from rich.console import Console
 from vertexai.generative_models import (
     FunctionDeclaration,
@@ -18,6 +18,8 @@ from vertexai.generative_models import (
 )
 from vertexai.preview.vision_models import ImageGenerationModel
 
+from guardrails import Guard
+from guardrails.hub import CorrectLanguage, RegexMatch
 from utils import get_image_bytes_base64
 
 load_dotenv(find_dotenv())
@@ -193,13 +195,22 @@ class PICASSO:
                 :param history:
                 :return:
                 """
-                message = history[-1][0]
-                if isinstance(message, tuple):
+                latest_message = history[-1][0] # get the last message
+                if isinstance(latest_message, tuple):
                     history.append(("Not a valid message", None))
                     return history
 
-                response = chat.send_message(message)
+                guard = Guard().use_many(
+                    CorrectLanguage(expected_language_iso="en", threshold=0.5),
+                    #RegexMatch(regex="Open.*")
+                    # Add more guards here
+                )
+                validation_result = guard.validate(latest_message)
+                print(validation_result)
+                assert validation_result.validation_passed, "Validation failed"
+                response = chat.send_message(latest_message)
                 message_part = response.candidates[0].content.parts[0]
+
                 if message_part.function_call:
                     function_name = message_part.function_call.name
                     function_args = message_part.function_call.args
